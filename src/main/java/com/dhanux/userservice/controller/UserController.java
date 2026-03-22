@@ -1,7 +1,9 @@
 package com.dhanux.userservice.controller;
 
+import com.dhanux.userservice.dto.LoginDto;
 import com.dhanux.userservice.dto.UserDto;
 import com.dhanux.userservice.exception.UserException;
+import com.dhanux.userservice.model.Login;
 import com.dhanux.userservice.model.User;
 import com.dhanux.userservice.response.UserResponse;
 import com.dhanux.userservice.service.UserService;
@@ -9,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +24,7 @@ public class UserController {
     private final UserService userService;
     private final ModelMapper modelMapper;
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse<UserDto>> saveUser(@RequestBody @Valid UserDto userDto) {
         try {
             User registeredUser = userService.register(modelMapper.map(userDto, User.class));
@@ -41,8 +44,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse<UserDto>> login(@RequestBody UserDto userDto) {
-        User user = userService.login(modelMapper.map(userDto, User.class));
+    public ResponseEntity<UserResponse<UserDto>> login(@RequestBody LoginDto loginDto) {
+        User user = userService.login(modelMapper.map(loginDto, Login.class));
         if (user != null) {
             return ResponseEntity.ok(new UserResponse<>("Login successful!",
                     modelMapper.map(user, UserDto.class), HttpStatus.OK));
@@ -75,8 +78,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse<UserDto>> updateUser(@PathVariable int id, @RequestBody UserDto userDto) {
-        User updatedUser = userService.update(id, modelMapper.map(userDto, User.class));
+    public ResponseEntity<UserResponse<UserDto>> updateUser(@PathVariable int id, @ModelAttribute UserDto userDto) {
+        User updatedUser = userService.update(id, userDto);
         if (updatedUser != null) {
             return ResponseEntity.ok(new UserResponse<>("User updated successfully!",
                     modelMapper.map(updatedUser, UserDto.class), HttpStatus.OK));
@@ -94,4 +97,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 new UserResponse<>("Delete failed: User not found!", null, HttpStatus.NOT_FOUND));
     }
+
+
 }

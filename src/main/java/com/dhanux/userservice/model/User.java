@@ -1,6 +1,9 @@
 package com.dhanux.userservice.model;
 
+import com.dhanux.userservice.validation.ValidImage;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -21,6 +24,7 @@ import java.time.LocalDateTime;
 @Entity
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
     private String name;
     @Email
@@ -29,7 +33,7 @@ public class User {
     private String password;
     private String residency;
     private String role;
-    private String image;
+    private String picture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

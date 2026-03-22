@@ -1,8 +1,10 @@
 package com.dhanux.userservice.dto;
 
+import com.dhanux.userservice.validation.ValidImage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Dhanujaya(Dhanu)
@@ -20,5 +22,6 @@ public class UserDto {
     private String password;
     private String residency;
     private String role;
-    private String image;
+    @ValidImage
+    private MultipartFile image;
 }

@@ -1,5 +1,7 @@
 package com.dhanux.userservice.service;
 
+import com.dhanux.userservice.dto.UserDto;
+import com.dhanux.userservice.model.Login;
 import com.dhanux.userservice.model.User;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +15,8 @@ import java.util.List;
 
 public interface UserService {
     User register (User user);
-    User login (User user);
-    User update (int id, User user);
+    User login (Login login);
+    User update (int id, UserDto user);
     List<User> getAll ();
     void remove (int id);
     User getById (int id);
