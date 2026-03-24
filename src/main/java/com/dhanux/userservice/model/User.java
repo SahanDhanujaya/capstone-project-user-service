@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * @author Dhanujaya(Dhanu)
@@ -30,11 +31,13 @@ public class User {
     @Email
     private String email;
     private String phone;
+    private String bio;
     private String password;
     private String residency;
     private String role;
     private String picture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 
 }

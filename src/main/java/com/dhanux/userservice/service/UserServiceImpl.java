@@ -5,6 +5,7 @@ import com.dhanux.userservice.exception.FileOperationException;
 import com.dhanux.userservice.model.Login;
 import com.dhanux.userservice.model.User;
 import com.dhanux.userservice.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -30,6 +31,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -47,30 +49,29 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public User login(Login login) {
-        List<User> userByEmail = userRepository.getUserByEmail(login.getEmail());
-        User existingUser = userByEmail.getFirst();
-        if (login.getPassword().equals(existingUser.getPassword())) {
-            return existingUser;
+        Optional<User> userByEmail = userRepository.getUserByEmail(login.getEmail());
+        if (userByEmail.isPresent()) {
+            User existingUser = userByEmail.get();
+            if (login.getPassword().equals(existingUser.getPassword())) {
+                return existingUser;
+            }
         }
         return null;
     }
 
     @Override
-    public User update(int id, UserDto userDto) {
-        return userRepository.findById(id).map(existingUser -> {
-            // Map DTO to the existing entity to preserve fields not in DTO
-            modelMapper.map(userDto, existingUser);
-
-            if (userDto.getImage() != null && !userDto.getImage().isEmpty()) {
-                String pictureId = UUID.randomUUID().toString();
-                savePicture(pictureId, userDto.getImage());
-                existingUser.setPicture(pictureId);
-            }
-
+    public User update(String email, User user) {
+        User existingUser = userRepository.findByEmail(email);
+        if (existingUser != null){
+            existingUser.setName(user.getName());
+            existingUser.setEmail(user.getEmail());
+            existingUser.setPhone(user.getPhone());
+            existingUser.setBio(user.getBio());
             existingUser.setUpdatedAt(LocalDateTime.now());
-            existingUser.setId(id); // Ensure ID remains the same
+            existingUser.setCreatedAt(existingUser.getCreatedAt());
             return userRepository.save(existingUser);
-        }).orElse(null);
+        }
+        return null;
     }
 
     @Override
@@ -79,16 +80,16 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void remove(int id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
+    public void remove(String email) {
+        if (userRepository.existsUserByEmail(email)) {
+            userRepository.deleteByEmail(email);
         }
     }
 
     @Override
-    public User getById(int id) {
-        if (userRepository.existsById(id)) {
-            Optional<User> byId = userRepository.findById(id);
+    public User getByEmail(String email) {
+        if (userRepository.existsUserByEmail(email)) {
+            Optional<User> byId = userRepository.getUserByEmail(email);
             if (byId.isPresent()) {
                 return byId.get();
             }
@@ -96,26 +97,46 @@ public class UserServiceImpl implements UserService{
         return null;
     }
 
-    private Path storagePath() {
-        if (storagePath == null) {
-            storagePath = Paths.get(storagePathStr);
+    @Override
+    public byte[] uploadImage(String email, MultipartFile image) throws IOException {
+        // 1. Create directory if not exists
+        Path root = Paths.get(storagePathStr);
+        if (!Files.exists(root)) {
+            Files.createDirectories(root);
         }
-        try {
-            Files.createDirectories(storagePath);
-        } catch (IOException e) {
-            throw new FileOperationException(
-                    "Failed to create storage directory: " + storagePath.toAbsolutePath(), e);
+
+        // 2. Save file with unique name
+        String fileName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
+        Path targetPath = root.resolve(fileName);
+        Files.copy(image.getInputStream(), targetPath);
+
+        // 3. Update User Record
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            user.setPicture(fileName);
+            userRepository.save(user);
         }
-        return storagePath;
+
+        // 4. Return the bytes so the controller can send them to the UI
+        return image.getBytes();
     }
 
-    private void savePicture(String pictureId, MultipartFile file) {
-        try {
-            Path root = storagePath(); // Ensures directory exists
-            Files.copy(file.getInputStream(), root.resolve(pictureId));
-            log.debug("Picture saved successfully: {}", pictureId);
-        } catch (IOException e) {
-            throw new FileOperationException("Could not store the file. Error: " + e.getMessage());
+    @Override
+    public byte[] getImage(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user != null && user.getPicture() != null) {
+            Path imagePath = Paths.get(storagePathStr).resolve(user.getPicture());
+            if (Files.exists(imagePath)) {
+                try {
+                    return Files.readAllBytes(imagePath);
+                } catch (IOException e) {
+                    log.error("Error reading image file: {}", e.getMessage());
+                    throw new FileOperationException("Failed to read profile picture.");
+                }
+            }
         }
+        return null;
     }
+
+
 }

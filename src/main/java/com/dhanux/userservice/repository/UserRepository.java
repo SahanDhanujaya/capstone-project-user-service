@@ -3,7 +3,7 @@ package com.dhanux.userservice.repository;
 import com.dhanux.userservice.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Dhanujaya(Dhanu)
@@ -11,5 +11,9 @@ import java.util.List;
  * @ProjectDetails user-service
  */
 public interface UserRepository extends JpaRepository<User, Integer> {
-    List<User> getUserByEmail(String email);
+    User findByEmail(String email);
+    Optional<User> getUserByEmail(String email);
+    void deleteByEmail(String email);
+
+    boolean existsUserByEmail(String email);
 }

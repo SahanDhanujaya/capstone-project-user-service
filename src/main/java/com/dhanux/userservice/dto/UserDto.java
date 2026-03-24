@@ -15,13 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @Data
 public class UserDto {
-    private int id;
     private String name;
     private String email;
+    private String bio;
     private String phone;
     private String password;
     private String residency;
     private String role;
-    @ValidImage
-    private MultipartFile image;
+    private String picture;
 }
