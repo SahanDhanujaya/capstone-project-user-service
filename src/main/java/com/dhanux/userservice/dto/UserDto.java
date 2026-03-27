@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @Data
 public class UserDto {
+    private String id;
     private String name;
     private String email;
     private String bio;
