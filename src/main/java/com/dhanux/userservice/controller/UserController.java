@@ -37,15 +37,14 @@ public class UserController {
             User registeredUser = userService.register(modelMapper.map(userDto, User.class));
             if (registeredUser != null) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(
-                        new UserResponse<>("User saved successfully!",
+                        new UserResponse<UserDto>("User saved successfully!",
                                 modelMapper.map(registeredUser, UserDto.class),
                                 HttpStatus.CREATED)
                 );
             }
         } catch (UserException e) {
-            log.debug(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new UserResponse<>(e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR)
+                    new UserResponse<UserDto>(e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR)
             );
         }
         return ResponseEntity.badRequest().body(new UserResponse<>("User not saved!", null, HttpStatus.BAD_REQUEST));
@@ -60,12 +59,12 @@ public class UserController {
                         modelMapper.map(user, UserDto.class), HttpStatus.OK));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                        new UserResponse<>("Invalid credentials!", null, HttpStatus.UNAUTHORIZED));
+                        new UserResponse<UserDto>("Invalid credentials!", null, HttpStatus.UNAUTHORIZED));
             }
         } catch (Exception e) {
             log.debug(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new UserResponse<>(e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR));
+                    new UserResponse<UserDto>(e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -77,7 +76,7 @@ public class UserController {
                     modelMapper.map(user, UserDto.class), HttpStatus.OK));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new UserResponse<>("User not found!", null, HttpStatus.NOT_FOUND));
+                new UserResponse<UserDto>("User not found!", null, HttpStatus.NOT_FOUND));
     }
 
     @GetMapping
@@ -88,7 +87,7 @@ public class UserController {
                 .map(user -> modelMapper.map(user, UserDto.class))
                 .toList();
 
-        return ResponseEntity.ok(new UserResponse<>("Users retrieved successfully!",
+        return ResponseEntity.ok(new UserResponse<List<UserDto>>("Users retrieved successfully!",
                 userDtos, HttpStatus.OK));
     }
 
@@ -101,7 +100,7 @@ public class UserController {
                     modelMapper.map(updatedUser, UserDto.class), HttpStatus.OK));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new UserResponse<>("Update failed: User not found!", null, HttpStatus.NOT_FOUND));
+                new UserResponse<UserDto>("Update failed: User not found!", null, HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/{email}")
@@ -111,7 +110,7 @@ public class UserController {
             return ResponseEntity.ok(new UserResponse<>("User deleted successfully!", null, HttpStatus.OK));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new UserResponse<>("Delete failed: User not found!", null, HttpStatus.NOT_FOUND));
+                new UserResponse<Void>("Delete failed: User not found!", null, HttpStatus.NOT_FOUND));
     }
 
     @PatchMapping(value ="/{email}/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -131,7 +130,6 @@ public class UserController {
                     .body(imageContent);
 
         } catch (IOException e) {
-            log.error("Upload failed for user {}", email, e);
             return ResponseEntity.internalServerError().build();
         }
     }

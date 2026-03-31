@@ -11,9 +11,9 @@ import org.springframework.http.HttpStatus;
  * @ProjectDetails user-service
  */
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@AllArgsConstructor // This generates the 3-arg constructor
+@NoArgsConstructor
 public class UserResponse <T> {
     private String message;
     private T user;
